@@ -21,7 +21,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/RobotsAndPencils/go-saml/util"
+	"github.com/maditya/go-saml/util"
 )
 
 func ParseCompressedEncodedRequest(b64RequestXML string) (*AuthnRequest, error) {
@@ -61,7 +61,7 @@ func ParseEncodedRequest(b64RequestXML string) (*AuthnRequest, error) {
 	return &authnRequest, nil
 }
 
-func (r *AuthnRequest) Validate(publicCertPath string) error {
+func (r *AuthnRequest) Validate(cert []byte) error {
 	if r.Version != "2.0" {
 		return errors.New("unsupported SAML Version")
 	}
@@ -72,7 +72,7 @@ func (r *AuthnRequest) Validate(publicCertPath string) error {
 
 	// TODO more validation
 
-	err := VerifyRequestSignature(r.originalString, publicCertPath)
+	err := VerifyRequestSignature(r.originalString, cert)
 	if err != nil {
 		return err
 	}
@@ -85,7 +85,7 @@ func (s *ServiceProviderSettings) GetAuthnRequest() *AuthnRequest {
 	r := NewAuthnRequest()
 	r.AssertionConsumerServiceURL = s.AssertionConsumerServiceURL
 	r.Issuer.Url = s.IDPSSODescriptorURL
-	r.Signature.KeyInfo.X509Data.X509Certificate.Cert = s.PublicCert()
+	r.Signature.KeyInfo.X509Data.X509Certificate.Cert = base64.StdEncoding.EncodeToString(s.Cert.Raw)
 
 	return r
 }
@@ -230,18 +230,18 @@ func (r *AuthnRequest) String() (string, error) {
 	return string(b), nil
 }
 
-func (r *AuthnRequest) SignedString(privateKeyPath string) (string, error) {
+func (r *AuthnRequest) SignedString(privateKey []byte) (string, error) {
 	s, err := r.String()
 	if err != nil {
 		return "", err
 	}
 
-	return SignRequest(s, privateKeyPath)
+	return SignRequest(s, privateKey)
 }
 
 // GetAuthnRequestURL generate a URL for the AuthnRequest to the IdP with the SAMLRequst parameter encoded
-func (r *AuthnRequest) EncodedSignedString(privateKeyPath string) (string, error) {
-	signed, err := r.SignedString(privateKeyPath)
+func (r *AuthnRequest) EncodedSignedString(privateKey []byte) (string, error) {
+	signed, err := r.SignedString(privateKey)
 	if err != nil {
 		return "", err
 	}
@@ -249,8 +249,8 @@ func (r *AuthnRequest) EncodedSignedString(privateKeyPath string) (string, error
 	return b64XML, nil
 }
 
-func (r *AuthnRequest) CompressedEncodedSignedString(privateKeyPath string) (string, error) {
-	signed, err := r.SignedString(privateKeyPath)
+func (r *AuthnRequest) CompressedEncodedSignedString(privateKey []byte) (string, error) {
+	signed, err := r.SignedString(privateKey)
 	if err != nil {
 		return "", err
 	}

@@ -1,6 +1,25 @@
 package saml
 
-import "encoding/xml"
+import (
+	"crypto/x509"
+	"encoding/xml"
+)
+
+// ServiceProviderSettings provides settings to configure server acting as a SAML Service Provider.
+// Expect only one IDP per SP in this configuration. If you need to configure multipe IDPs for an SP
+// then configure multiple instances of this module
+type ServiceProviderSettings struct {
+	PrivateKey                  []byte
+	Cert                        *x509.Certificate
+	IDPSSOURL                   string
+	IDPSSODescriptorURL         string
+	IDPCert                     *x509.Certificate
+	AssertionConsumerServiceURL string
+	SPSignRequest               bool
+}
+
+type IdentityProviderSettings struct {
+}
 
 type AuthnRequest struct {
 	XMLName                        xml.Name
@@ -23,7 +42,7 @@ type AuthnRequest struct {
 
 type Issuer struct {
 	XMLName xml.Name
-	SAML    string `xml:"xmlns:saml,attr"`
+	SAML    string `xml:"xmlns:saml,attr,omitempty"`
 	Url     string `xml:",innerxml"`
 }
 
