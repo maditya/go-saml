@@ -46,7 +46,7 @@ func ParseEncodedResponse(b64ResponseXML string) (*Response, error) {
 	return &response, nil
 }
 
-func (r *Response) Validate(s *ServiceProviderSettings) error {
+func (r *Response) Validate(s *ServiceProviderConfig) error {
 	if r.Version != "2.0" {
 		return errors.New("unsupported SAML Version")
 	}
@@ -75,7 +75,7 @@ func (r *Response) Validate(s *ServiceProviderSettings) error {
 		return errors.New("subject recipient mismatch, expected: " + s.AssertionConsumerServiceURL + " not " + r.Assertion.Subject.SubjectConfirmation.SubjectConfirmationData.Recipient)
 	}
 
-	err := VerifyResponseSignature(r.originalString, s.Cert.Raw)
+	err := VerifyResponseSignature(r.originalString, s.IDPCert.Raw)
 	if err != nil {
 		return err
 	}

@@ -19,7 +19,7 @@ func TestGetSignedRequest(t *testing.T) {
 	assert.NotEmpty(certBlock)
 	cert, err := x509.ParseCertificate(certBlock.Bytes)
 	assert.NoError(err)
-	sp := ServiceProviderSettings{
+	sp := ServiceProviderConfig{
 		PrivateKey:                  privateKey,
 		Cert:                        cert,
 		IDPSSOURL:                   "http://www.onelogin.net",
@@ -47,7 +47,7 @@ func TestGetUnsignedRequest(t *testing.T) {
 	assert.NotEmpty(certBlock)
 	cert, err := x509.ParseCertificate(certBlock.Bytes)
 	assert.NoError(err)
-	sp := ServiceProviderSettings{
+	sp := ServiceProviderConfig{
 		Cert:                        cert,
 		IDPSSOURL:                   "http://www.onelogin.net",
 		IDPSSODescriptorURL:         "http://www.onelogin.net",

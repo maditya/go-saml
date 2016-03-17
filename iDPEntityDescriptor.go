@@ -6,7 +6,7 @@ import (
 	"fmt"
 )
 
-func (s *ServiceProviderSettings) GetEntityDescriptor() (string, error) {
+func (s *ServiceProviderConfig) GetEntityDescriptor() (string, error) {
 	d := EntityDescriptor{
 		XMLName: xml.Name{
 			Local: "md:EntityDescriptor",

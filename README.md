@@ -1,13 +1,13 @@
 go-saml
 ======
 
-[![Build Status](https://travis-ci.org/RobotsAndPencils/go-saml.svg?branch=master)](https://travis-ci.org/RobotsAndPencils/go-saml)
+[![Build Status](https://travis-ci.org/maditya/go-saml.svg?branch=master)](https://travis-ci.org/maditya/go-saml)
 
 A just good enough SAML client library written in Go. This library is by no means complete and has been developed
 to solve several specific integration efforts. However, it's a start, and it would be great to see
 it evolve into a more fleshed out implemention.
 
-Inspired by the early work of [Matt Baird](https://github.com/mattbaird/gosaml).
+Inspired by work of [Matt Baird](https://github.com/mattbaird/gosaml) and [Mike Brevoort](https://github.com/RobotsAndPencils/go-saml).
 
 The library supports:
 
@@ -21,7 +21,7 @@ The library supports:
 Installation
 ------------
 
-    $ go get github.com/RobotsAndPencils/go-saml
+    $ go get github.com/maditya/go-saml
 
 Here's a convenient way to generate a certificate:
 
@@ -36,20 +36,19 @@ Below are samples to show how you might use the library.
 ### Generating Signed AuthnRequests
 
 ```go
-sp := saml.ServiceProviderSettings{
-  PublicCertPath:              "../default.crt",
-  PrivateKeyPath:              "../default.key",
+sp := saml.ServiceProviderConfig{
+  PrivateKey: 		       ".."
+  Cert: 		       ".."
   IDPSSOURL:                   "http://idp/saml2",
   IDPSSODescriptorURL:         "http://idp/issuer",
-  IDPPublicCertPath:           "idpcert.crt",
-  SPSignRequest:               "true",
+  IDPCert:		       ".."
+  SPSignRequest:               true,
   AssertionConsumerServiceURL: "http://localhost:8000/saml_consume",
 }
-sp.Init()
 
 // generate the AuthnRequest and then get a base64 encoded string of the XML
 authnRequest := sp.GetAuthnRequest()
-b64XML, err := authnRequest.EncodedSignedString(sp.PrivateKeyPath)
+b64XML, err := authnRequest.EncodedSignedString(sp.PrivateKey)
 if err != nil {
   panic(err)
 }
@@ -113,7 +112,7 @@ response = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 ### Service provider metadata
 
 ```go
-func samlMetadataHandler(sp *saml.ServiceProviderSettings) http.Handler {
+func samlMetadataHandler(sp *saml.ServiceProviderConfig) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		md, err := sp.GetEntityDescriptor()
 		if err != nil {
@@ -182,10 +181,10 @@ authnResponse.InResponseTo = authnRequestIdRespondingTo
 authnResponse.Assertion.Subject.SubjectConfirmation.SubjectConfirmationData.Recipient = issuer
 
 // signed XML string
-signed, err := authnResponse.SignedString("/path/to/private.key")
+signed, err := authnResponse.SignedString("<private key []byte>")
 
 // or signed base64 encoded XML string
-b64XML, err := authnResponse.EncodedSignedString("/path/to/private.key")
+b64XML, err := authnResponse.EncodedSignedString("<private key []byte>")
 
 ```
 

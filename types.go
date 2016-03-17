@@ -5,10 +5,10 @@ import (
 	"encoding/xml"
 )
 
-// ServiceProviderSettings provides settings to configure server acting as a SAML Service Provider.
+// ServiceProviderConfig provides settings to configure server acting as a SAML Service Provider.
 // Expect only one IDP per SP in this configuration. If you need to configure multipe IDPs for an SP
 // then configure multiple instances of this module
-type ServiceProviderSettings struct {
+type ServiceProviderConfig struct {
 	PrivateKey                  []byte
 	Cert                        *x509.Certificate
 	IDPSSOURL                   string
@@ -30,6 +30,8 @@ type AuthnRequest struct {
 	Version                        string                `xml:"Version,attr"`
 	ProtocolBinding                string                `xml:"ProtocolBinding,attr"`
 	AssertionConsumerServiceURL    string                `xml:"AssertionConsumerServiceURL,attr"`
+	Destination                    string                `xml:"Destination,attr"`
+	ForceAuthn                     string                `xml:"ForceAuthn,attr,omitempty"`
 	IssueInstant                   string                `xml:"IssueInstant,attr"`
 	AssertionConsumerServiceIndex  int                   `xml:"AssertionConsumerServiceIndex,attr"`
 	AttributeConsumingServiceIndex int                   `xml:"AttributeConsumingServiceIndex,attr"`

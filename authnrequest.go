@@ -81,10 +81,11 @@ func (r *AuthnRequest) Validate(cert []byte) error {
 }
 
 // GetSignedAuthnRequest returns a singed XML document that represents a AuthnRequest SAML document
-func (s *ServiceProviderSettings) GetAuthnRequest() *AuthnRequest {
+func (s *ServiceProviderConfig) GetAuthnRequest() *AuthnRequest {
 	r := NewAuthnRequest()
 	r.AssertionConsumerServiceURL = s.AssertionConsumerServiceURL
 	r.Issuer.Url = s.IDPSSODescriptorURL
+	r.Destination = s.IDPSSOURL
 	r.Signature.KeyInfo.X509Data.X509Certificate.Cert = base64.StdEncoding.EncodeToString(s.Cert.Raw)
 
 	return r
@@ -109,6 +110,7 @@ func NewAuthnRequest() *AuthnRequest {
 	return &AuthnRequest{
 		XMLName: xml.Name{
 			Local: "samlp:AuthnRequest",
+			//Local: "saml2p:AuthnRequest",
 		},
 		SAMLP:                       "urn:oasis:names:tc:SAML:2.0:protocol",
 		SAML:                        "urn:oasis:names:tc:SAML:2.0:assertion",
@@ -116,13 +118,16 @@ func NewAuthnRequest() *AuthnRequest {
 		ID:                          id,
 		ProtocolBinding:             "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST",
 		Version:                     "2.0",
+		ForceAuthn:                  "false",
 		AssertionConsumerServiceURL: "", // caller must populate ar.AppSettings.AssertionConsumerServiceURL,
 		Issuer: Issuer{
 			XMLName: xml.Name{
-				Local: "saml:Issuer",
+				//Local: "saml:Issuer",
+				Local: "saml2:Issuer",
 			},
 			Url:  "", // caller must populate ar.AppSettings.Issuer
 			SAML: "urn:oasis:names:tc:SAML:2.0:assertion",
+			//SAML: "urn:oasis:names:tc:SAML:2.0:protocol",
 		},
 		IssueInstant: time.Now().UTC().Format(time.RFC3339Nano),
 		NameIDPolicy: NameIDPolicy{
