@@ -281,7 +281,6 @@ func (r *Response) String() (string, error) {
 	return string(b), nil
 }
 
-//func (r *Response) SignedString(privateKey []byte) (string, error) {
 func (r *Response) SignedString(privateKey crypto.PrivateKey) (string, error) {
 	s, err := r.String()
 	if err != nil {
@@ -296,7 +295,6 @@ func (r *Response) SignedString(privateKey crypto.PrivateKey) (string, error) {
 	return SignResponse(s, keyBytes)
 }
 
-//func (r *Response) EncodedSignedString(privateKey []byte) (string, error) {
 func (r *Response) EncodedSignedString(privateKey crypto.PrivateKey) (string, error) {
 	signed, err := r.SignedString(privateKey)
 	if err != nil {
@@ -306,7 +304,6 @@ func (r *Response) EncodedSignedString(privateKey crypto.PrivateKey) (string, er
 	return b64XML, nil
 }
 
-//func (r *Response) CompressedEncodedSignedString(privateKey []byte) (string, error) {
 func (r *Response) CompressedEncodedSignedString(privateKey crypto.PrivateKey) (string, error) {
 	signed, err := r.SignedString(privateKey)
 	if err != nil {

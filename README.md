@@ -3,29 +3,13 @@ go-saml
 
 [![Build Status](https://travis-ci.org/maditya/go-saml.svg?branch=master)](https://travis-ci.org/maditya/go-saml)
 
-A just good enough SAML client library written in Go. This library is by no means complete and has been developed
-to solve several specific integration efforts. However, it's a start, and it would be great to see
-it evolve into a more fleshed out implemention.
-
-Inspired by work of [Matt Baird](https://github.com/mattbaird/gosaml) and [Mike Brevoort](https://github.com/RobotsAndPencils/go-saml).
-
-The library supports:
-
-* generating signed/unsigned AuthnRequests
-* validating signed AuthnRequests
-* generating service provider metadata
-* generating signed Responses
-* validating signed Responses
+Fork of [Mike Brevoort's go-saml](https://github.com/RobotsAndPencils/go-saml) with cleaner API, bugfixes and some enhancements.
 
 
 Installation
 ------------
 
     $ go get github.com/maditya/go-saml
-
-Here's a convenient way to generate a certificate:
-
-    curl -sSL https://raw.githubusercontent.com/frntn/x509-san/master/gencert.sh | CRT_CN="mycert"  bash
 
 
 Usage
@@ -181,28 +165,9 @@ authnResponse.InResponseTo = authnRequestIdRespondingTo
 authnResponse.Assertion.Subject.SubjectConfirmation.SubjectConfirmationData.Recipient = issuer
 
 // signed XML string
-signed, err := authnResponse.SignedString("<private key []byte>")
+signed, err := authnResponse.SignedString("<private key>")
 
 // or signed base64 encoded XML string
-b64XML, err := authnResponse.EncodedSignedString("<private key []byte>")
+b64XML, err := authnResponse.EncodedSignedString("<private key>")
 
 ```
-
-
-### Contributing
-
-Would love any contributions you having including better documentation, tests, or more robust functionality.
-
-    git clone git@github.com:RobotsAndPencils/go-saml.git
-    make init
-    make test
-
-### Contact
-
-[![Robots & Pencils Logo](http://f.cl.ly/items/2W3n1r2R0j2p2b3n3j3c/rnplogo.png)](http://www.robotsandpencils.com)
-
-Made with :heart: by Robots & Pencils ([@robotsNpencils](https://twitter.com/robotsNpencils))
-
-#### Maintainers
-
-- [Mike Brevoort](http://github.com/mbrevoort) ([@mbrevoort](https://twitter.com/mbrevoort))
