@@ -50,10 +50,10 @@ func sign(xml string, privateKey []byte, id string) (string, error) {
 	defer deleteTempFile(privKeyFile.Name())
 	ioutil.WriteFile(privKeyFile.Name(), privateKey, 0644)
 
-	//fmt.Println("xmlsec1", "--sign", "--privkey-pem", privateKeyFile.Name(),
+	//fmt.Println("xmlsec1", "--sign", "--privkey-der", privateKeyFile.Name(),
 	//	"--id-attr:ID", id,
 	//	"--output", samlXmlsecOutput.Name(), samlXmlsecInput.Name())
-	output, err := exec.Command("xmlsec1", "--sign", "--privkey-pem", privKeyFile.Name(),
+	output, err := exec.Command("xmlsec1", "--sign", "--privkey-der", privKeyFile.Name(),
 		"--id-attr:ID", id,
 		"--output", samlXmlsecOutput.Name(), samlXmlsecInput.Name()).CombinedOutput()
 	if err != nil {

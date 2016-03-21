@@ -15,9 +15,13 @@
 package saml
 
 import (
+	"crypto"
+	"crypto/rsa"
+	"crypto/x509"
 	"encoding/base64"
 	"encoding/xml"
 	"errors"
+	"fmt"
 	"net/url"
 	"time"
 
@@ -235,17 +239,21 @@ func (r *AuthnRequest) String() (string, error) {
 	return string(b), nil
 }
 
-func (r *AuthnRequest) SignedString(privateKey []byte) (string, error) {
+func (r *AuthnRequest) SignedString(privateKey crypto.PrivateKey) (string, error) {
 	s, err := r.String()
 	if err != nil {
 		return "", err
 	}
-
-	return SignRequest(s, privateKey)
+	key, ok := privateKey.(*rsa.PrivateKey)
+	if !ok {
+		return "", fmt.Errorf("key type not supported")
+	}
+	keyBytes := x509.MarshalPKCS1PrivateKey(key)
+	return SignRequest(s, keyBytes)
 }
 
 // GetAuthnRequestURL generate a URL for the AuthnRequest to the IdP with the SAMLRequst parameter encoded
-func (r *AuthnRequest) EncodedSignedString(privateKey []byte) (string, error) {
+func (r *AuthnRequest) EncodedSignedString(privateKey crypto.PrivateKey) (string, error) {
 	signed, err := r.SignedString(privateKey)
 	if err != nil {
 		return "", err
@@ -254,7 +262,7 @@ func (r *AuthnRequest) EncodedSignedString(privateKey []byte) (string, error) {
 	return b64XML, nil
 }
 
-func (r *AuthnRequest) CompressedEncodedSignedString(privateKey []byte) (string, error) {
+func (r *AuthnRequest) CompressedEncodedSignedString(privateKey crypto.PrivateKey) (string, error) {
 	signed, err := r.SignedString(privateKey)
 	if err != nil {
 		return "", err

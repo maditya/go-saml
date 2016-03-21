@@ -11,14 +11,18 @@ import (
 
 func TestGetSignedRequest(t *testing.T) {
 	assert := assert.New(t)
-	privateKey, err := ioutil.ReadFile("./default.key")
-	assert.NoError(err)
 	certPem, err := ioutil.ReadFile("./default.crt")
 	assert.NoError(err)
 	certBlock, _ := pem.Decode(certPem)
 	assert.NotEmpty(certBlock)
 	cert, err := x509.ParseCertificate(certBlock.Bytes)
+
+	k, err := ioutil.ReadFile("./default.key")
 	assert.NoError(err)
+	kd, _ := pem.Decode(k)
+	privateKey, err := x509.ParsePKCS1PrivateKey(kd.Bytes)
+	assert.NoError(err)
+
 	sp := ServiceProviderConfig{
 		PrivateKey:                  privateKey,
 		Cert:                        cert,

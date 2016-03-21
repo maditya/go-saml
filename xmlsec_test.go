@@ -29,10 +29,11 @@ func TestRequest(t *testing.T) {
 	assert.NoError(err)
 	xmlAuthnRequest := string(b)
 
-	privateKey, err := ioutil.ReadFile("./default.key")
+	k, err := ioutil.ReadFile("./default.key")
 	assert.NoError(err)
+	kd, _ := pem.Decode(k)
 
-	signedXml, err := SignRequest(xmlAuthnRequest, privateKey)
+	signedXml, err := SignRequest(xmlAuthnRequest, kd.Bytes)
 	assert.NoError(err)
 	assert.NotEmpty(signedXml)
 
@@ -58,9 +59,11 @@ func TestResponse(t *testing.T) {
 	assert.NoError(err)
 	xmlResponse := string(b)
 
-	privateKey, err := ioutil.ReadFile("./default.key")
+	k, err := ioutil.ReadFile("./default.key")
 	assert.NoError(err)
-	signedXml, err := SignResponse(xmlResponse, privateKey)
+	kd, _ := pem.Decode(k)
+
+	signedXml, err := SignResponse(xmlResponse, kd.Bytes)
 	assert.NoError(err)
 	assert.NotEmpty(signedXml)
 

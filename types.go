@@ -1,6 +1,7 @@
 package saml
 
 import (
+	"crypto"
 	"crypto/x509"
 	"encoding/xml"
 )
@@ -9,7 +10,7 @@ import (
 // Expect only one IDP per SP in this configuration. If you need to configure multipe IDPs for an SP
 // then configure multiple instances of this module
 type ServiceProviderConfig struct {
-	PrivateKey                  []byte
+	PrivateKey                  crypto.PrivateKey
 	Cert                        *x509.Certificate
 	IDPSSOURL                   string
 	IDPSSODescriptorURL         string
@@ -19,6 +20,33 @@ type ServiceProviderConfig struct {
 }
 
 type IdentityProviderSettings struct {
+}
+
+type Assertion struct {
+	XMLName            xml.Name
+	ID                 string `xml:"ID,attr"`
+	Version            string `xml:"Version,attr"`
+	XS                 string `xml:"xmlns:xs,attr"`
+	XSI                string `xml:"xmlns:xsi,attr"`
+	SAML               string `xml:"saml,attr"`
+	IssueInstant       string `xml:"IssueInstant,attr"`
+	Issuer             Issuer `xml:"Issuer"`
+	Subject            Subject
+	Conditions         Conditions
+	AttributeStatement AttributeStatement
+}
+
+type AssertionConsumerService struct {
+	XMLName  xml.Name
+	Binding  string `xml:"Binding,attr"`
+	Location string `xml:"Location,attr"`
+	Index    string `xml:"index,attr"`
+}
+
+type AuthnContextClassRef struct {
+	XMLName   xml.Name
+	SAML      string `xml:"xmlns:saml,attr"`
+	Transport string `xml:",innerxml"`
 }
 
 type AuthnRequest struct {
@@ -42,54 +70,23 @@ type AuthnRequest struct {
 	originalString                 string
 }
 
-type Issuer struct {
-	XMLName xml.Name
-	SAML    string `xml:"xmlns:saml,attr,omitempty"`
-	Url     string `xml:",innerxml"`
-}
-
-type NameIDPolicy struct {
-	XMLName     xml.Name
-	AllowCreate bool   `xml:"AllowCreate,attr"`
-	Format      string `xml:"Format,attr"`
-}
-
-type RequestedAuthnContext struct {
-	XMLName              xml.Name
-	SAMLP                string               `xml:"xmlns:samlp,attr"`
-	Comparison           string               `xml:"Comparison,attr"`
-	AuthnContextClassRef AuthnContextClassRef `xml:"AuthnContextClassRef"`
-}
-
-type AuthnContextClassRef struct {
-	XMLName   xml.Name
-	SAML      string `xml:"xmlns:saml,attr"`
-	Transport string `xml:",innerxml"`
-}
-
-type Signature struct {
+type Attribute struct {
 	XMLName        xml.Name
-	Id             string `xml:"Id,attr"`
-	SignedInfo     SignedInfo
-	SignatureValue SignatureValue
-	KeyInfo        KeyInfo
+	Name           string `xml:",attr"`
+	FriendlyName   string `xml:",attr"`
+	NameFormat     string `xml:",attr"`
+	AttributeValue AttributeValue
 }
 
-type SignedInfo struct {
-	XMLName                xml.Name
-	CanonicalizationMethod CanonicalizationMethod
-	SignatureMethod        SignatureMethod
-	SamlsigReference       SamlsigReference
+type AttributeStatement struct {
+	XMLName    xml.Name
+	Attributes []Attribute `xml:"Attribute"`
 }
 
-type SignatureValue struct {
+type AttributeValue struct {
 	XMLName xml.Name
+	Type    string `xml:"xsi:type,attr"`
 	Value   string `xml:",innerxml"`
-}
-
-type KeyInfo struct {
-	XMLName  xml.Name
-	X509Data X509Data `xml:",innerxml"`
 }
 
 type CanonicalizationMethod struct {
@@ -97,27 +94,10 @@ type CanonicalizationMethod struct {
 	Algorithm string `xml:"Algorithm,attr"`
 }
 
-type SignatureMethod struct {
-	XMLName   xml.Name
-	Algorithm string `xml:"Algorithm,attr"`
-}
-
-type SamlsigReference struct {
+type Conditions struct {
 	XMLName      xml.Name
-	URI          string       `xml:"URI,attr"`
-	Transforms   Transforms   `xml:",innerxml"`
-	DigestMethod DigestMethod `xml:",innerxml"`
-	DigestValue  DigestValue  `xml:",innerxml"`
-}
-
-type X509Data struct {
-	XMLName         xml.Name
-	X509Certificate X509Certificate `xml:",innerxml"`
-}
-
-type Transforms struct {
-	XMLName   xml.Name
-	Transform Transform
+	NotBefore    string `xml:",attr"`
+	NotOnOrAfter string `xml:",attr"`
 }
 
 type DigestMethod struct {
@@ -129,14 +109,10 @@ type DigestValue struct {
 	XMLName xml.Name
 }
 
-type X509Certificate struct {
-	XMLName xml.Name
-	Cert    string `xml:",innerxml"`
-}
-
-type Transform struct {
-	XMLName   xml.Name
-	Algorithm string `xml:"Algorithm,attr"`
+type EntityAttributes struct {
+	XMLName          xml.Name
+	SAML             string      `xml:"xmlns:saml,attr"`
+	EntityAttributes []Attribute `xml:"Attribute"` // should be array??
 }
 
 type EntityDescriptor struct {
@@ -146,8 +122,9 @@ type EntityDescriptor struct {
 	MD       string `xml:"xmlns:md,attr"`
 	EntityId string `xml:"entityID,attr"`
 
-	Extensions      Extensions      `xml:"Extensions"`
-	SPSSODescriptor SPSSODescriptor `xml:"SPSSODescriptor"`
+	Extensions       Extensions       `xml:"Extensions"`
+	IDPSSODescriptor IDPSSODescriptor `xml:"IDPSSODescriptor"`
+	SPSSODescriptor  SPSSODescriptor  `xml:"SPSSODescriptor"`
 }
 
 type Extensions struct {
@@ -159,41 +136,39 @@ type Extensions struct {
 	EntityAttributes string `xml:"EntityAttributes"`
 }
 
-type SPSSODescriptor struct {
-	XMLName                    xml.Name
-	ProtocolSupportEnumeration string `xml:"protocolSupportEnumeration,attr"`
-	SigningKeyDescriptor       KeyDescriptor
-	EncryptionKeyDescriptor    KeyDescriptor
-	// SingleLogoutService        SingleLogoutService `xml:"SingleLogoutService"`
-	AssertionConsumerServices []AssertionConsumerService
+type IDPSSODescriptor struct {
+	XMLName       xml.Name
+	SSOService    []SSOService    `xml:"SingleSignOnService"`
+	KeyDescriptor []KeyDescriptor `xml:"KeyDescriptor"`
 }
 
-type EntityAttributes struct {
+type Issuer struct {
 	XMLName xml.Name
-	SAML    string `xml:"xmlns:saml,attr"`
-
-	EntityAttributes []Attribute `xml:"Attribute"` // should be array??
-}
-
-type SPSSODescriptors struct {
+	SAML    string `xml:"xmlns:saml,attr,omitempty"`
+	Url     string `xml:",innerxml"`
 }
 
 type KeyDescriptor struct {
 	XMLName xml.Name
-	Use     string  `xml:"use,attr"`
 	KeyInfo KeyInfo `xml:"KeyInfo"`
+	Use     string  `xml:"use,attr"`
 }
 
-type SingleLogoutService struct {
-	Binding  string `xml:"Binding,attr"`
-	Location string `xml:"Location,attr"`
-}
-
-type AssertionConsumerService struct {
+type KeyInfo struct {
 	XMLName  xml.Name
-	Binding  string `xml:"Binding,attr"`
-	Location string `xml:"Location,attr"`
-	Index    string `xml:"index,attr"`
+	X509Data X509Data `xml:"X509Data"`
+}
+
+type NameID struct {
+	XMLName xml.Name
+	Format  string `xml:",attr"`
+	Value   string `xml:",innerxml"`
+}
+
+type NameIDPolicy struct {
+	XMLName     xml.Name
+	AllowCreate bool   `xml:"AllowCreate,attr"`
+	Format      string `xml:"Format,attr"`
 }
 
 type Response struct {
@@ -215,24 +190,76 @@ type Response struct {
 	originalString string
 }
 
-type Assertion struct {
-	XMLName            xml.Name
-	ID                 string `xml:"ID,attr"`
-	Version            string `xml:"Version,attr"`
-	XS                 string `xml:"xmlns:xs,attr"`
-	XSI                string `xml:"xmlns:xsi,attr"`
-	SAML               string `xml:"saml,attr"`
-	IssueInstant       string `xml:"IssueInstant,attr"`
-	Issuer             Issuer `xml:"Issuer"`
-	Subject            Subject
-	Conditions         Conditions
-	AttributeStatement AttributeStatement
+type RequestedAuthnContext struct {
+	XMLName              xml.Name
+	SAMLP                string               `xml:"xmlns:samlp,attr"`
+	Comparison           string               `xml:"Comparison,attr"`
+	AuthnContextClassRef AuthnContextClassRef `xml:"AuthnContextClassRef"`
 }
 
-type Conditions struct {
+type SamlsigReference struct {
 	XMLName      xml.Name
-	NotBefore    string `xml:",attr"`
-	NotOnOrAfter string `xml:",attr"`
+	URI          string       `xml:"URI,attr"`
+	Transforms   Transforms   `xml:",innerxml"`
+	DigestMethod DigestMethod `xml:",innerxml"`
+	DigestValue  DigestValue  `xml:",innerxml"`
+}
+
+type Signature struct {
+	XMLName        xml.Name
+	Id             string `xml:"Id,attr"`
+	SignedInfo     SignedInfo
+	SignatureValue SignatureValue
+	KeyInfo        KeyInfo
+}
+
+type SignatureMethod struct {
+	XMLName   xml.Name
+	Algorithm string `xml:"Algorithm,attr"`
+}
+
+type SignatureValue struct {
+	XMLName xml.Name
+	Value   string `xml:",innerxml"`
+}
+
+type SignedInfo struct {
+	XMLName                xml.Name
+	CanonicalizationMethod CanonicalizationMethod
+	SignatureMethod        SignatureMethod
+	SamlsigReference       SamlsigReference
+}
+
+type SPSSODescriptor struct {
+	XMLName                    xml.Name
+	ProtocolSupportEnumeration string `xml:"protocolSupportEnumeration,attr"`
+	SigningKeyDescriptor       KeyDescriptor
+	EncryptionKeyDescriptor    KeyDescriptor
+	// SingleLogoutService        SingleLogoutService `xml:"SingleLogoutService"`
+	AssertionConsumerServices []AssertionConsumerService
+}
+
+type SPSSODescriptors struct {
+}
+
+type SSOService struct {
+	Binding  string `xml:"Binding,attr"`
+	Location string `xml:"Location,attr"`
+}
+
+type SingleLogoutService struct {
+	Binding  string `xml:"Binding,attr"`
+	Location string `xml:"Location,attr"`
+}
+
+type Status struct {
+	XMLName    xml.Name
+	StatusCode StatusCode `xml:"StatusCode"`
+}
+
+type StatusCode struct {
+	XMLName xml.Name
+	Value   string `xml:",attr"`
 }
 
 type Subject struct {
@@ -247,43 +274,28 @@ type SubjectConfirmation struct {
 	SubjectConfirmationData SubjectConfirmationData
 }
 
-type Status struct {
-	XMLName    xml.Name
-	StatusCode StatusCode `xml:"StatusCode"`
-}
-
 type SubjectConfirmationData struct {
 	InResponseTo string `xml:",attr"`
 	NotOnOrAfter string `xml:",attr"`
 	Recipient    string `xml:",attr"`
 }
 
-type NameID struct {
+type Transform struct {
+	XMLName   xml.Name
+	Algorithm string `xml:"Algorithm,attr"`
+}
+
+type Transforms struct {
+	XMLName   xml.Name
+	Transform Transform
+}
+
+type X509Certificate struct {
 	XMLName xml.Name
-	Format  string `xml:",attr"`
-	Value   string `xml:",innerxml"`
+	Cert    string `xml:",innerxml"`
 }
 
-type StatusCode struct {
-	XMLName xml.Name
-	Value   string `xml:",attr"`
-}
-
-type AttributeValue struct {
-	XMLName xml.Name
-	Type    string `xml:"xsi:type,attr"`
-	Value   string `xml:",innerxml"`
-}
-
-type Attribute struct {
-	XMLName        xml.Name
-	Name           string `xml:",attr"`
-	FriendlyName   string `xml:",attr"`
-	NameFormat     string `xml:",attr"`
-	AttributeValue AttributeValue
-}
-
-type AttributeStatement struct {
-	XMLName    xml.Name
-	Attributes []Attribute `xml:"Attribute"`
+type X509Data struct {
+	XMLName         xml.Name
+	X509Certificate X509Certificate `xml:"X509Certificate"`
 }

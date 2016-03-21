@@ -1,9 +1,13 @@
 package saml
 
 import (
+	"crypto"
+	"crypto/rsa"
+	"crypto/x509"
 	"encoding/base64"
 	"encoding/xml"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/maditya/go-saml/util"
@@ -277,16 +281,23 @@ func (r *Response) String() (string, error) {
 	return string(b), nil
 }
 
-func (r *Response) SignedString(privateKey []byte) (string, error) {
+//func (r *Response) SignedString(privateKey []byte) (string, error) {
+func (r *Response) SignedString(privateKey crypto.PrivateKey) (string, error) {
 	s, err := r.String()
 	if err != nil {
 		return "", err
 	}
+	key, ok := privateKey.(*rsa.PrivateKey)
+	if !ok {
+		return "", fmt.Errorf("key type not supported")
+	}
+	keyBytes := x509.MarshalPKCS1PrivateKey(key)
 
-	return SignResponse(s, privateKey)
+	return SignResponse(s, keyBytes)
 }
 
-func (r *Response) EncodedSignedString(privateKey []byte) (string, error) {
+//func (r *Response) EncodedSignedString(privateKey []byte) (string, error) {
+func (r *Response) EncodedSignedString(privateKey crypto.PrivateKey) (string, error) {
 	signed, err := r.SignedString(privateKey)
 	if err != nil {
 		return "", err
@@ -295,7 +306,8 @@ func (r *Response) EncodedSignedString(privateKey []byte) (string, error) {
 	return b64XML, nil
 }
 
-func (r *Response) CompressedEncodedSignedString(privateKey []byte) (string, error) {
+//func (r *Response) CompressedEncodedSignedString(privateKey []byte) (string, error) {
+func (r *Response) CompressedEncodedSignedString(privateKey crypto.PrivateKey) (string, error) {
 	signed, err := r.SignedString(privateKey)
 	if err != nil {
 		return "", err
