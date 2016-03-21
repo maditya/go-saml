@@ -113,8 +113,7 @@ func NewAuthnRequest() *AuthnRequest {
 	id := util.ID()
 	return &AuthnRequest{
 		XMLName: xml.Name{
-			Local: "samlp:AuthnRequest",
-			//Local: "saml2p:AuthnRequest",
+			Local: "saml2p:AuthnRequest",
 		},
 		SAMLP:                       "urn:oasis:names:tc:SAML:2.0:protocol",
 		SAML:                        "urn:oasis:names:tc:SAML:2.0:assertion",
@@ -126,24 +125,22 @@ func NewAuthnRequest() *AuthnRequest {
 		AssertionConsumerServiceURL: "", // caller must populate ar.AppSettings.AssertionConsumerServiceURL,
 		Issuer: Issuer{
 			XMLName: xml.Name{
-				//Local: "saml:Issuer",
 				Local: "saml2:Issuer",
 			},
 			Url:  "", // caller must populate ar.AppSettings.Issuer
 			SAML: "urn:oasis:names:tc:SAML:2.0:assertion",
-			//SAML: "urn:oasis:names:tc:SAML:2.0:protocol",
 		},
 		IssueInstant: time.Now().UTC().Format(time.RFC3339Nano),
 		NameIDPolicy: NameIDPolicy{
 			XMLName: xml.Name{
-				Local: "samlp:NameIDPolicy",
+				Local: "saml2p:NameIDPolicy",
 			},
 			AllowCreate: true,
 			Format:      "urn:oasis:names:tc:SAML:2.0:nameid-format:transient",
 		},
 		RequestedAuthnContext: RequestedAuthnContext{
 			XMLName: xml.Name{
-				Local: "samlp:RequestedAuthnContext",
+				Local: "saml2p:RequestedAuthnContext",
 			},
 			SAMLP:      "urn:oasis:names:tc:SAML:2.0:protocol",
 			Comparison: "exact",
