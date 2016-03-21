@@ -1,11 +1,12 @@
 package saml
 
 import (
+	"encoding/base64"
 	"encoding/xml"
 	"fmt"
 )
 
-func (s *ServiceProviderSettings) GetEntityDescriptor() (string, error) {
+func (s *ServiceProviderConfig) GetEntityDescriptor() (string, error) {
 	d := EntityDescriptor{
 		XMLName: xml.Name{
 			Local: "md:EntityDescriptor",
@@ -43,7 +44,7 @@ func (s *ServiceProviderSettings) GetEntityDescriptor() (string, error) {
 							XMLName: xml.Name{
 								Local: "ds:X509Certificate",
 							},
-							Cert: s.PublicCert(),
+							Cert: base64.StdEncoding.EncodeToString(s.Cert.Raw),
 						},
 					},
 				},
@@ -66,7 +67,7 @@ func (s *ServiceProviderSettings) GetEntityDescriptor() (string, error) {
 							XMLName: xml.Name{
 								Local: "ds:X509Certificate",
 							},
-							Cert: s.PublicCert(),
+							Cert: base64.StdEncoding.EncodeToString(s.Cert.Raw),
 						},
 					},
 				},

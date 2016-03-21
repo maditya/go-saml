@@ -15,13 +15,17 @@
 package saml
 
 import (
+	"crypto"
+	"crypto/rsa"
+	"crypto/x509"
 	"encoding/base64"
 	"encoding/xml"
 	"errors"
+	"fmt"
 	"net/url"
 	"time"
 
-	"github.com/RobotsAndPencils/go-saml/util"
+	"github.com/maditya/go-saml/util"
 )
 
 func ParseCompressedEncodedRequest(b64RequestXML string) (*AuthnRequest, error) {
@@ -61,7 +65,7 @@ func ParseEncodedRequest(b64RequestXML string) (*AuthnRequest, error) {
 	return &authnRequest, nil
 }
 
-func (r *AuthnRequest) Validate(publicCertPath string) error {
+func (r *AuthnRequest) Validate(cert []byte) error {
 	if r.Version != "2.0" {
 		return errors.New("unsupported SAML Version")
 	}
@@ -72,7 +76,7 @@ func (r *AuthnRequest) Validate(publicCertPath string) error {
 
 	// TODO more validation
 
-	err := VerifyRequestSignature(r.originalString, publicCertPath)
+	err := VerifyRequestSignature(r.originalString, cert)
 	if err != nil {
 		return err
 	}
@@ -81,11 +85,12 @@ func (r *AuthnRequest) Validate(publicCertPath string) error {
 }
 
 // GetSignedAuthnRequest returns a singed XML document that represents a AuthnRequest SAML document
-func (s *ServiceProviderSettings) GetAuthnRequest() *AuthnRequest {
+func (s *ServiceProviderConfig) GetAuthnRequest() *AuthnRequest {
 	r := NewAuthnRequest()
 	r.AssertionConsumerServiceURL = s.AssertionConsumerServiceURL
 	r.Issuer.Url = s.IDPSSODescriptorURL
-	r.Signature.KeyInfo.X509Data.X509Certificate.Cert = s.PublicCert()
+	r.Destination = s.IDPSSOURL
+	r.Signature.KeyInfo.X509Data.X509Certificate.Cert = base64.StdEncoding.EncodeToString(s.Cert.Raw)
 
 	return r
 }
@@ -109,6 +114,7 @@ func NewAuthnRequest() *AuthnRequest {
 	return &AuthnRequest{
 		XMLName: xml.Name{
 			Local: "samlp:AuthnRequest",
+			//Local: "saml2p:AuthnRequest",
 		},
 		SAMLP:                       "urn:oasis:names:tc:SAML:2.0:protocol",
 		SAML:                        "urn:oasis:names:tc:SAML:2.0:assertion",
@@ -116,13 +122,16 @@ func NewAuthnRequest() *AuthnRequest {
 		ID:                          id,
 		ProtocolBinding:             "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST",
 		Version:                     "2.0",
+		ForceAuthn:                  "false",
 		AssertionConsumerServiceURL: "", // caller must populate ar.AppSettings.AssertionConsumerServiceURL,
 		Issuer: Issuer{
 			XMLName: xml.Name{
-				Local: "saml:Issuer",
+				//Local: "saml:Issuer",
+				Local: "saml2:Issuer",
 			},
 			Url:  "", // caller must populate ar.AppSettings.Issuer
 			SAML: "urn:oasis:names:tc:SAML:2.0:assertion",
+			//SAML: "urn:oasis:names:tc:SAML:2.0:protocol",
 		},
 		IssueInstant: time.Now().UTC().Format(time.RFC3339Nano),
 		NameIDPolicy: NameIDPolicy{
@@ -230,18 +239,22 @@ func (r *AuthnRequest) String() (string, error) {
 	return string(b), nil
 }
 
-func (r *AuthnRequest) SignedString(privateKeyPath string) (string, error) {
+func (r *AuthnRequest) SignedString(privateKey crypto.PrivateKey) (string, error) {
 	s, err := r.String()
 	if err != nil {
 		return "", err
 	}
-
-	return SignRequest(s, privateKeyPath)
+	key, ok := privateKey.(*rsa.PrivateKey)
+	if !ok {
+		return "", fmt.Errorf("key type not supported")
+	}
+	keyBytes := x509.MarshalPKCS1PrivateKey(key)
+	return SignRequest(s, keyBytes)
 }
 
 // GetAuthnRequestURL generate a URL for the AuthnRequest to the IdP with the SAMLRequst parameter encoded
-func (r *AuthnRequest) EncodedSignedString(privateKeyPath string) (string, error) {
-	signed, err := r.SignedString(privateKeyPath)
+func (r *AuthnRequest) EncodedSignedString(privateKey crypto.PrivateKey) (string, error) {
+	signed, err := r.SignedString(privateKey)
 	if err != nil {
 		return "", err
 	}
@@ -249,8 +262,8 @@ func (r *AuthnRequest) EncodedSignedString(privateKeyPath string) (string, error
 	return b64XML, nil
 }
 
-func (r *AuthnRequest) CompressedEncodedSignedString(privateKeyPath string) (string, error) {
-	signed, err := r.SignedString(privateKeyPath)
+func (r *AuthnRequest) CompressedEncodedSignedString(privateKey crypto.PrivateKey) (string, error) {
+	signed, err := r.SignedString(privateKey)
 	if err != nil {
 		return "", err
 	}
