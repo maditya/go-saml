@@ -15,7 +15,7 @@ Installation
 Usage
 -----
 
-Below are samples to show how you might use the library.
+Below are samples to show how you can use the library.
 
 ### Generating Signed AuthnRequests
 
