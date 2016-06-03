@@ -144,7 +144,7 @@ type IDPSSODescriptor struct {
 
 type Issuer struct {
 	XMLName xml.Name
-	SAML    string `xml:"xmlns:saml,attr,omitempty"`
+	SAML    string `xml:"xmlns:saml2,attr,omitempty"`
 	Url     string `xml:",innerxml"`
 }
 

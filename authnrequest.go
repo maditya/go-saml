@@ -88,7 +88,7 @@ func (r *AuthnRequest) Validate(cert []byte) error {
 func (s *ServiceProviderConfig) GetAuthnRequest() *AuthnRequest {
 	r := NewAuthnRequest()
 	r.AssertionConsumerServiceURL = s.AssertionConsumerServiceURL
-	r.Issuer.Url = s.IDPSSODescriptorURL
+	r.Issuer.Url = s.AssertionConsumerServiceURL
 	r.Destination = s.IDPSSOURL
 	r.Signature.KeyInfo.X509Data.X509Certificate.Cert = base64.StdEncoding.EncodeToString(s.Cert.Raw)
 
