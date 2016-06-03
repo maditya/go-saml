@@ -98,10 +98,9 @@ func verify(xml string, cert []byte, id string) error {
 	defer deleteTempFile(certFile.Name())
 	ioutil.WriteFile(certFile.Name(), cert, 0644)
 
-	//fmt.Println("xmlsec1", "--verify", "--pubkey-cert-der", certFile.Name(), "--id-attr:ID", id, samlXmlsecInput.Name())
 	_, err = exec.Command("xmlsec1", "--verify", "--pubkey-cert-der", certFile.Name(), "--id-attr:ID", id, samlXmlsecInput.Name()).CombinedOutput()
 	if err != nil {
-		return errors.New("error verifing signature: " + err.Error())
+		return errors.New("error verifying signature: " + err.Error())
 	}
 	return nil
 }

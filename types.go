@@ -51,7 +51,7 @@ type AuthnContextClassRef struct {
 
 type AuthnRequest struct {
 	XMLName                        xml.Name
-	SAMLP                          string                `xml:"xmlns:samlp,attr"`
+	SAMLP                          string                `xml:"xmlns:saml2p,attr"`
 	SAML                           string                `xml:"xmlns:saml,attr"`
 	SAMLSIG                        string                `xml:"xmlns:samlsig,attr"`
 	ID                             string                `xml:"ID,attr"`
@@ -192,7 +192,7 @@ type Response struct {
 
 type RequestedAuthnContext struct {
 	XMLName              xml.Name
-	SAMLP                string               `xml:"xmlns:samlp,attr"`
+	SAMLP                string               `xml:"xmlns:saml2p,attr"`
 	Comparison           string               `xml:"Comparison,attr"`
 	AuthnContextClassRef AuthnContextClassRef `xml:"AuthnContextClassRef"`
 }
