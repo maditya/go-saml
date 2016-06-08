@@ -4,6 +4,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"io/ioutil"
+	"os/exec"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -35,6 +36,11 @@ func TestGetSignedRequest(t *testing.T) {
 
 	// Construct an AuthnRequest
 	authnRequest := sp.GetAuthnRequest()
+
+	_, err = exec.LookPath("xmlsec1")
+	if err != nil {
+		t.Skip("skipping subsequent test since xmlsec1 is missing")
+	}
 	signedXML, err := authnRequest.SignedString(sp.PrivateKey)
 	assert.NoError(err)
 	assert.NotEmpty(signedXML)
