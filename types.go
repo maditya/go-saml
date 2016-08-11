@@ -4,6 +4,7 @@ import (
 	"crypto"
 	"crypto/x509"
 	"encoding/xml"
+	"time"
 )
 
 // ServiceProviderConfig provides settings to configure server acting as a SAML Service Provider.
@@ -17,6 +18,10 @@ type ServiceProviderConfig struct {
 	IDPCert                     *x509.Certificate
 	AssertionConsumerServiceURL string
 	SPSignRequest               bool
+	// AssertionValidity provides flexibility and can be enforced in addition to
+	// SubjectConfirmationData.NotOnOrAfter field in the response while determining
+	// expiry
+	AssertionValidity time.Duration
 }
 
 type IdentityProviderSettings struct {

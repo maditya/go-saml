@@ -13,6 +13,16 @@ import (
 	"github.com/maditya/go-saml/util"
 )
 
+// keeping errExpired unexported and provide IsExpired()
+type errExpired struct {
+	Err    error
+	Expiry time.Time
+}
+
+func (e *errExpired) Error() string {
+	return fmt.Sprintf("assertion expired at %v", e.Expiry)
+}
+
 func ParseCompressedEncodedResponse(b64ResponseXML string) (*Response, error) {
 	authnResponse := Response{}
 	compressedXML, err := base64.StdEncoding.DecodeString(b64ResponseXML)
@@ -91,7 +101,18 @@ func (r *Response) Validate(s *ServiceProviderConfig) error {
 		return e
 	}
 	if notOnOrAfter.Before(time.Now()) {
-		return errors.New("assertion has expired on: " + expires)
+		return &errExpired{Expiry: notOnOrAfter}
+	}
+
+	issueTime, e := time.Parse(time.RFC3339, r.Assertion.IssueInstant)
+	if e != nil {
+		return e
+	}
+	if s.AssertionValidity != 0 {
+		expires := issueTime.Add(s.AssertionValidity)
+		if expires.Before(time.Now()) {
+			return &errExpired{Expiry: expires}
+		}
 	}
 
 	return nil
@@ -322,4 +343,9 @@ func (r *Response) GetAttribute(name string) string {
 		}
 	}
 	return ""
+}
+
+func IsExpired(err error) bool {
+	_, ok := err.(*errExpired)
+	return ok
 }
