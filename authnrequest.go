@@ -85,14 +85,17 @@ func (r *AuthnRequest) Validate(cert []byte) error {
 }
 
 // GetSignedAuthnRequest returns a singed XML document that represents a AuthnRequest SAML document
-func (s *ServiceProviderConfig) GetAuthnRequest() *AuthnRequest {
+func (s *ServiceProviderConfig) GetAuthnRequest() (*AuthnRequest, error) {
+	if s.Cert == nil {
+		return nil, fmt.Errorf("saml:GetAuthnRequest:invalid cert provided")
+	}
 	r := NewAuthnRequest()
 	r.AssertionConsumerServiceURL = s.AssertionConsumerServiceURL
 	r.Issuer.Url = s.AssertionConsumerServiceURL
 	r.Destination = s.IDPSSOURL
 	r.Signature.KeyInfo.X509Data.X509Certificate.Cert = base64.StdEncoding.EncodeToString(s.Cert.Raw)
 
-	return r
+	return r, nil
 }
 
 // GetAuthnRequestURL generate a URL for the AuthnRequest to the IdP with the SAMLRequst parameter encoded
@@ -241,9 +244,12 @@ func (r *AuthnRequest) SignedString(privateKey crypto.PrivateKey) (string, error
 	if err != nil {
 		return "", err
 	}
+	if key == nil {
+		return "", fmt.Errorf("saml:SignedString:private key cannot be nil")
+	}
 	key, ok := privateKey.(*rsa.PrivateKey)
 	if !ok {
-		return "", fmt.Errorf("key type not supported")
+		return "", fmt.Errorf("saml:SignedString:private key type not supported")
 	}
 	keyBytes := x509.MarshalPKCS1PrivateKey(key)
 	return SignRequest(s, keyBytes)

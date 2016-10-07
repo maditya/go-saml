@@ -35,7 +35,8 @@ func TestGetSignedRequest(t *testing.T) {
 	}
 
 	// Construct an AuthnRequest
-	authnRequest := sp.GetAuthnRequest()
+	authnRequest, err := sp.GetAuthnRequest()
+	assert.NoError(err)
 
 	_, err = exec.LookPath("xmlsec1")
 	if err != nil {
@@ -67,7 +68,7 @@ func TestGetUnsignedRequest(t *testing.T) {
 	}
 
 	// Construct an AuthnRequest
-	authnRequest := sp.GetAuthnRequest()
+	authnRequest, err := sp.GetAuthnRequest()
 	assert.NoError(err)
 	assert.NotEmpty(authnRequest)
 }
