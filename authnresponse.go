@@ -88,6 +88,9 @@ func (r *Response) Validate(s *ServiceProviderConfig) error {
 	if r.Assertion.Subject.SubjectConfirmation.SubjectConfirmationData.Recipient != s.AssertionConsumerServiceURL {
 		return errors.New("subject recipient mismatch, expected: " + s.AssertionConsumerServiceURL + " not " + r.Assertion.Subject.SubjectConfirmation.SubjectConfirmationData.Recipient)
 	}
+	if s.IDPCert == nil {
+		return errors.New("IDPCert is nil")
+	}
 
 	err := VerifyResponseSignature(r.originalString, s.IDPCert.Raw)
 	if err != nil {
