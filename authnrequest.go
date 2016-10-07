@@ -244,7 +244,7 @@ func (r *AuthnRequest) SignedString(privateKey crypto.PrivateKey) (string, error
 	if err != nil {
 		return "", err
 	}
-	if key == nil {
+	if privateKey == nil {
 		return "", fmt.Errorf("saml:SignedString:private key cannot be nil")
 	}
 	key, ok := privateKey.(*rsa.PrivateKey)
